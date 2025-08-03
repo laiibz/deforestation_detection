@@ -1,0 +1,40 @@
+body {
+  font-family: Arial;
+  background: #f0f2f5;
+  margin: 0;
+}
+
+nav {
+  margin-bottom: 2rem;
+}
+
+.container {
+  width: 350px;
+  margin: 40px auto;
+  padding: 25px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ccc;
+}
+
+form input {
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+form button {
+  width: 100%;
+  padding: 10px;
+  background: #4CAF50;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button {
+  font-size: 1rem;
+}
