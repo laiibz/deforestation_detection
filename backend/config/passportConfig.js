@@ -39,6 +39,7 @@ async (accessToken, refreshToken, profile, done) => {
       }
     }
 
+    console.log("Returning user to passport:", user);
     return done(null, user);
   } catch (err) {
     console.error("Google OAuth strategy error:", err);
@@ -46,15 +47,11 @@ async (accessToken, refreshToken, profile, done) => {
   }
 }));
 
+// Simplified serialization for stateless JWT approach
 passport.serializeUser((user, done) => {
-  done(null, user._id);
+  done(null, user);
 });
 
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
+passport.deserializeUser((user, done) => {
+  done(null, user);
 });
