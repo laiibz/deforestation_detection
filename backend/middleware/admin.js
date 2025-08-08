@@ -1,7 +1,7 @@
-// backend/middleware/auth.js
+// backend/middleware/admin.js
 import jwt from 'jsonwebtoken';
 
-const auth = (req, res, next) => {
+const adminAuth = (req, res, next) => {
   const token = req.cookies.accessToken;
   
   if (!token) {
@@ -10,6 +10,12 @@ const auth = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if user has admin role
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied. Admin privileges required." });
+    }
+    
     req.user = decoded;
     next();
   } catch (error) {
@@ -18,4 +24,4 @@ const auth = (req, res, next) => {
   }
 };
 
-export default auth;
+export default adminAuth; 
