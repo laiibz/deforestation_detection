@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './components/Home';
 import Detect from './components/Detect';
 import Dashboard from './components/Dashboard';
+import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import AuthPrompt from './components/AuthPrompt';
@@ -32,6 +33,12 @@ function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminDashboard />
           </ProtectedRoute>
         } />
       </Routes>
