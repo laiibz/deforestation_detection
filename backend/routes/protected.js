@@ -1,122 +1,108 @@
 // backend/routes/protected.js
-import express from "express";
-import jwt from "jsonwebtoken";
-import multer from "multer";
-import FormData from "form-data";
-// Using built-in fetch (Node.js 18+)
+import express from 'express';
+import auth from '../middleware/auth.js';
+import multer from 'multer';
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configure multer for file uploads
-const upload = multer({ storage: multer.memoryStorage() });
-
-// Middleware to check authentication
-const requireAuth = (req, res, next) => {
-  try {
-    const token = req.cookies.accessToken;
-    
-    if (!token) {
-      return res.status(401).json({ 
-        success: false,
-        message: "Access denied. Please login." 
-      });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error("Auth error:", err);
-    res.status(401).json({ 
-      success: false,
-      message: "Invalid token. Please login again." 
-    });
-  }
-};
-
-// Dashboard route
-router.get("/dashboard", requireAuth, (req, res) => {
-  res.json({ 
-    success: true,
-    message: "Welcome to the dashboard!",
-    user: {
-      email: req.user.email,
-      username: req.user.username,
-      role: req.user.role
-    }
-  });
+  },
 });
 
-// Proxy route to Flask model prediction service
-router.post("/predict", requireAuth, upload.single('file'), async (req, res) => {
+router.get('/dashboard', auth, (req, res) => {
+  const name = req.user.username || req.user.email;
+  res.json({ message: `Welcome ${name}, this is your protected dashboard.` });
+});
+
+// Detection route (temporarily without auth for testing)
+router.post('/detect', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        error: "No file uploaded"
-      });
+      return res.status(400).json({ error: 'No image file provided' });
     }
 
-    // Create form data to send to Flask service
-    const formData = new FormData();
-    formData.append('file', req.file.buffer, {
-      filename: req.file.originalname,
-      contentType: req.file.mimetype
-    });
-
-    // Forward request to Flask prediction service
-    const flaskResponse = await fetch('http://localhost:5001/predict', {
-      method: 'POST',
-      body: formData,
-      headers: formData.getHeaders()
-    });
-
-    const result = await flaskResponse.json();
-
-    if (!flaskResponse.ok) {
-      return res.status(flaskResponse.status).json({
-        success: false,
-        error: result.error || 'Prediction failed'
-      });
-    }
-
-    // Add user information to the response
-    const response = {
-      ...result,
-      user: {
-        email: req.user.email,
-        username: req.user.username
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    res.json(response);
-  } catch (err) {
-    console.error('Prediction proxy error:', err);
-    res.status(500).json({
-      success: false,
-      error: 'Server error during prediction. Please try again.'
-    });
-  }
-});
-
-// Health check for Flask model service
-router.get("/model-status", requireAuth, async (req, res) => {
-  try {
-    const flaskResponse = await fetch('http://localhost:5001/health');
-    const result = await flaskResponse.json();
+    // Convert file buffer to base64
+    const imageBase64 = req.file.buffer.toString('base64');
     
-    res.json({
-      success: true,
-      modelService: result
+    // Call Python script for prediction
+    const pythonScript = path.join(__dirname, '../model/predict.py');
+    
+    const pythonProcess = spawn('python', [pythonScript], {
+      cwd: path.join(__dirname, '../model')
     });
-  } catch (err) {
-    console.error('Model status check error:', err);
-    res.status(500).json({
-      success: false,
-      error: 'Unable to connect to model service',
-      modelService: { status: 'unavailable' }
+    
+    // Send image data to Python script
+    const inputData = JSON.stringify({ image: imageBase64 });
+    pythonProcess.stdin.write(inputData);
+    pythonProcess.stdin.end();
+    
+    let result = '';
+    let error = '';
+    
+    pythonProcess.stdout.on('data', (data) => {
+      result += data.toString();
     });
+    
+    pythonProcess.stderr.on('data', (data) => {
+      error += data.toString();
+    });
+    
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Python script error:', error);
+        return res.status(500).json({ 
+          error: 'Prediction failed', 
+          details: error || 'Python script exited with non-zero code' 
+        });
+      }
+      
+      try {
+        const predictionResult = JSON.parse(result);
+        
+        if (predictionResult.success) {
+          res.json({
+            success: true,
+            resultImage: `data:image/png;base64,${predictionResult.overlay}`,
+            original: `data:image/png;base64,${predictionResult.original}`,
+            mask: predictionResult.mask,
+            deforestation_percentage: predictionResult.deforestation_percentage,
+            has_deforestation: predictionResult.has_deforestation,
+            message: 'Detection completed successfully'
+          });
+        } else {
+          res.status(500).json({ 
+            error: 'Prediction failed', 
+            details: predictionResult.error 
+          });
+        }
+      } catch (parseError) {
+        console.error('Failed to parse Python output:', parseError);
+        res.status(500).json({ 
+          error: 'Failed to parse prediction result', 
+          details: parseError.message 
+        });
+      }
+    });
+    
+  } catch (error) {
+    console.error('Detection error:', error);
+    res.status(500).json({ error: 'Detection failed', details: error.message });
   }
 });
 

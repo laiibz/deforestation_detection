@@ -185,43 +185,47 @@ router.post("/login", async (req, res) => {
 // ✅ Google OAuth Login
 router.get("/google", passport.authenticate("google", { 
   scope: ["profile", "email"],
-  prompt: "select_account"
+  prompt: "select_account",
+  session: false
 }));
 
 // ✅ Google Callback
 router.get("/google/callback",
   passport.authenticate("google", {
     failureRedirect: "http://localhost:3000/login?error=google_auth_failed",
-    session: true,
+    session: false, // Disable session to avoid serialization issues
   }),
-  (req, res) => {
+  async (req, res) => {
     try {
       console.log("Google OAuth successful for user:", req.user.email);
       
-      // Clear any existing session
-      req.logout(() => {
-        // Generate JWT token for Google users
-        const token = jwt.sign(
-          { 
-            id: req.user._id, 
-            email: req.user.email, 
-            username: req.user.username,
-            role: req.user.role 
-          },
-          process.env.JWT_SECRET,
-          { expiresIn: "24h" }
-        );
+      // Check if user exists and has required properties
+      if (!req.user || !req.user._id) {
+        console.error("User object is missing or invalid:", req.user);
+        return res.redirect("http://localhost:3000/login?error=user_not_found");
+      }
+      
+      // Generate JWT token for Google users
+      const token = jwt.sign(
+        { 
+          id: req.user._id, 
+          email: req.user.email, 
+          username: req.user.username || req.user.displayName || "User",
+          role: req.user.role || "user"
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+      );
 
-        // Set cookie and redirect
-        res.cookie("accessToken", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        });
-
-        res.redirect("http://localhost:3000/dashboard");
+      // Set cookie and redirect
+      res.cookie("accessToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
       });
+
+      res.redirect("http://localhost:3000/dashboard");
     } catch (error) {
       console.error("Google callback error:", error);
       res.redirect("http://localhost:3000/login?error=google_callback_failed");
