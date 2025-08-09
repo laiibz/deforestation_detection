@@ -23,8 +23,10 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:3000", // React frontend
-  credentials: true
+  origin: ["http://localhost:3000", "http://localhost:5000"], // React frontend and backend
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 app.use(cookieParser());
 app.use(express.json());
@@ -45,15 +47,15 @@ app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api", protectedRoutes);
+app.use("/api/admin", adminRoutes);
 
 // MongoDB Connection with better error handling
 (async () => {
-  // Load passportConfig AFTER dotenv is ready
-  await import('./config/passportConfig.js');
-
   try {
+    // Load passportConfig AFTER dotenv is ready
+    await import('./config/passportConfig.js');
+
     // Set mongoose options to prevent timeout issues
     mongoose.set('bufferCommands', false);
     mongoose.set('bufferMaxEntries', 0);
@@ -73,4 +75,7 @@ app.use("/api", protectedRoutes);
   }
   
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-})();
+})().catch(err => {
+  console.error("Server startup error:", err);
+  process.exit(1);
+});
