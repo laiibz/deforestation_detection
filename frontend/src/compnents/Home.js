@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Home.css';
 
 function Home() {
   const navigate = useNavigate();
@@ -9,17 +10,21 @@ function Home() {
     if (token) {
       navigate('/detect');
     } else {
-      navigate('/auth');  // ask login or signup
+      navigate('/auth');
     }
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>🌳 AI Deforestation Detector</h1>
-      <p>This tool helps detect deforestation areas using satellite imagery and AI.</p>
-      <button onClick={handleClick} style={{ padding: '1rem', marginTop: '1rem' }}>
-        Detect Now
-      </button>
+    <div className="home-hero d-flex align-items-center justify-content-center">
+      <div className="overlay text-center text-white">
+        <h1 className="display-4 fw-bold mb-3">AI Deforestation Detector</h1>
+        <p className="lead mb-4">
+           Detect your deforested areas using satellite imagery.
+        </p>
+        <button className="btn btn-success btn-lg px-5 py-2" onClick={handleClick}>
+          Detect Now
+        </button>
+      </div>
     </div>
   );
 }

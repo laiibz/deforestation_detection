@@ -1,0 +1,22 @@
+/* src/components/Detect.css */
+.detect-page {
+  background-image: url('../assets/authbg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.detect-box {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+}

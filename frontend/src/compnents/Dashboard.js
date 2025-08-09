@@ -15,20 +15,21 @@ function Dashboard() {
       .then(res => {
         if (res.data.success && res.data.user) {
           setUser(res.data.user);
+          if (res.data.user.role === 'admin') {
+            navigate('/admin');
+            return;
+          }
         } else {
-          // If not authenticated, redirect to login
           navigate('/login');
         }
       })
       .catch(() => {
-        // If error, redirect to login
         navigate('/login');
       })
       .finally(() => {
         setIsLoading(false);
       });
 
-    // Get dashboard data
     axios.get('http://localhost:5000/api/dashboard', {
       withCredentials: true
     })
@@ -90,7 +91,6 @@ function Dashboard() {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Animated Background Elements */}
       <div style={{
         position: 'absolute',
         top: '0',
@@ -133,7 +133,7 @@ function Dashboard() {
               justifyContent: 'center',
               fontSize: '20px'
             }}>
-              🌳
+              
             </div>
             <h1 style={{ 
               color: '#4ade80', 
@@ -206,7 +206,7 @@ function Dashboard() {
             textAlign: 'center',
             textShadow: '0 0 20px rgba(74, 222, 128, 0.5)'
           }}>
-            🌿 Welcome to Your Forest Dashboard
+             Welcome to Your Forest Dashboard
           </h2>
           <p style={{ 
             color: '#9ca3af', 
@@ -218,7 +218,7 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Only Detection */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -227,32 +227,11 @@ function Dashboard() {
         }}>
           {[
             {
-              title: '🌳 Detection',
+              title: ' Detection',
               description: 'Upload satellite images to detect deforestation patterns',
-              icon: '🌳',
+              
               color: '#4ade80',
               action: () => navigate('/detect')
-            },
-            {
-              title: '📊 Analytics',
-              description: 'View detailed analysis and forest health reports',
-              icon: '📊',
-              color: '#fbbf24',
-              action: () => navigate('/analytics')
-            },
-            {
-              title: '⚙️ Settings',
-              description: 'Manage your account and detection preferences',
-              icon: '⚙️',
-              color: '#60a5fa',
-              action: () => navigate('/settings')
-            },
-            {
-              title: '📈 History',
-              description: 'View your past detection results and trends',
-              icon: '📈',
-              color: '#a78bfa',
-              action: () => navigate('/history')
             }
           ].map((card, index) => (
             <div
@@ -306,7 +285,7 @@ function Dashboard() {
           ))}
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Without View Reports */}
         <div style={{
           background: 'rgba(0, 0, 0, 0.6)',
           backdropFilter: 'blur(10px)',
@@ -321,7 +300,7 @@ function Dashboard() {
             textAlign: 'center',
             fontSize: '1.8rem'
           }}>
-            🚀 Quick Actions
+             Quick Actions
           </h3>
           <div style={{
             display: 'flex',
@@ -352,7 +331,7 @@ function Dashboard() {
                 e.target.style.boxShadow = '0 4px 15px rgba(74, 222, 128, 0.3)';
               }}
             >
-              🌳 Start Detection
+               Start Detection
             </button>
             
             <button
@@ -378,33 +357,7 @@ function Dashboard() {
                 e.target.style.boxShadow = '0 4px 15px rgba(251, 191, 36, 0.3)';
               }}
             >
-              📤 Upload Images
-            </button>
-            
-            <button
-              onClick={() => navigate('/reports')}
-              style={{
-                background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
-                color: 'white',
-                padding: '12px 24px',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 15px rgba(96, 165, 250, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-3px)';
-                e.target.style.boxShadow = '0 8px 25px rgba(96, 165, 250, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 15px rgba(96, 165, 250, 0.3)';
-              }}
-            >
-              📋 View Reports
+               Upload Images
             </button>
           </div>
         </div>
@@ -455,5 +408,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
-

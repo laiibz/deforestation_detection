@@ -126,17 +126,16 @@ function Login() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{
-            width: '60px',
-            height: '60px',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            borderRadius: '16px',
+            
+            
+          
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.5rem',
             boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)'
           }}>
-            <span style={{ fontSize: '28px' }}>🌳</span>
+            <span style={{ fontSize: '28px' }}></span>
           </div>
           <h1 style={{
             fontSize: '2rem',

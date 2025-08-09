@@ -1,0 +1,13 @@
+.home-hero {
+ background-image: url('../assets/deforestation_background.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  position: relative;
+}
+
+.overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2rem;
+  border-radius: 10px;
+}

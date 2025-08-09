@@ -7,25 +7,36 @@ export default function Segmentation() {
 
   const handleUpload = (e) => {
     setImage(e.target.files[0]);
+    setResult(null);
   };
 
   const handleSubmit = async () => {
     if (!image) return alert("Please select an image");
     const formData = new FormData();
-    formData.append("image", image);
+    formData.append("file", image);
 
     setLoading(true);
     setResult(null);
 
     try {
-      const res = await fetch("http://localhost:5000/predict", {
+      const res = await fetch("http://localhost:5001/predict", {
         method: "POST",
         body: formData
       });
       const data = await res.json();
-      setResult(data);
+      
+      if (data) {
+        setResult({
+          mask: data.overlay, // Using overlay as mask for display
+          overlay: data.overlay
+        });
+      } else {
+        console.error('Detection failed:', data.error);
+        alert('Detection failed: ' + data.error);
+      }
     } catch (err) {
       console.error(err);
+      alert('Detection failed: ' + err.message);
     }
     setLoading(false);
   };
@@ -34,7 +45,9 @@ export default function Segmentation() {
     <div style={{ padding: "20px" }}>
       <h2>Deforestation Segmentation</h2>
       <input type="file" accept="image/*" onChange={handleUpload} />
-      <button onClick={handleSubmit}>Submit</button>
+      <button onClick={handleSubmit} disabled={loading}>
+        {loading ? 'Processing...' : 'Submit'}
+      </button>
 
       {loading && <p>Processing...</p>}
 
@@ -45,8 +58,8 @@ export default function Segmentation() {
             <img src={URL.createObjectURL(image)} alt="input" width="400" />
           </div>
           <div>
-            <h4>Predicted Mask</h4>
-            <img src={`data:image/png;base64,${result.mask}`} alt="mask" width="400" />
+            <h4>Detection Result</h4>
+            <img src={`data:image/png;base64,${result.overlay}`} alt="result" width="400" />
           </div>
         </div>
       )}
